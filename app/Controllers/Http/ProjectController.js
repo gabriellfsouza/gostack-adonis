@@ -3,6 +3,10 @@
 /** @typedef {import('@adonisjs/framework/src/Request')} Request */
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
+/** @typedef {import('@adonisjs/auth/src/Schemes/Session')} AuthSession */
+
+/** @type {typeof import('../../Models/Project')} */
+const Project = use('App/Models/Project')
 
 /**
  * Resourceful controller for interacting with projects
@@ -18,6 +22,9 @@ class ProjectController {
    * @param {View} ctx.view
    */
   async index ({ request, response, view }) {
+    const projects = await Project.query().with('user').fetch()
+
+    return projects
   }
 
   /**
@@ -39,8 +46,14 @@ class ProjectController {
    * @param {object} ctx
    * @param {Request} ctx.request
    * @param {Response} ctx.response
+   * @param {AuthSession} ctx.auth
    */
-  async store ({ request, response }) {
+  async store ({ request, response, auth }) {
+    const data = request.only(['title', 'description'])
+
+    const project = await Project.create({ ...data, user_id: auth.user.id })
+
+    return project
   }
 
   /**
@@ -53,6 +66,12 @@ class ProjectController {
    * @param {View} ctx.view
    */
   async show ({ params, request, response, view }) {
+    const project = await Project.findOrFail(params.id)
+
+    await project.load('user')
+    await project.load('tasks')
+
+    return project
   }
 
   /**
@@ -76,6 +95,15 @@ class ProjectController {
    * @param {Response} ctx.response
    */
   async update ({ params, request, response }) {
+    const project = await Project.findOrFail(params.id)
+
+    const data = request.only(['title', 'description'])
+
+    project.merge(data)
+
+    await project.save()
+
+    return project
   }
 
   /**
@@ -87,6 +115,9 @@ class ProjectController {
    * @param {Response} ctx.response
    */
   async destroy ({ params, request, response }) {
+    const project = await Project.findOrFail(params.id)
+
+    await project.delete()
   }
 }
 

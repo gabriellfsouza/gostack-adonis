@@ -4,6 +4,9 @@
 /** @typedef {import('@adonisjs/framework/src/Response')} Response */
 /** @typedef {import('@adonisjs/framework/src/View')} View */
 
+/** @type {typeof import('../../Models/Task')} */
+const Task = use('App/Models/Task')
+
 /**
  * Resourceful controller for interacting with tasks
  */
@@ -17,7 +20,14 @@ class TaskController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ request, response, view }) {
+  async index ({ params, request, response, view }) {
+    const tasks = await Task
+      .query()
+      .where('project_id', params.projects_id)
+      .with('user')
+      .fetch()
+
+    return tasks
   }
 
   /**
@@ -40,7 +50,18 @@ class TaskController {
    * @param {Request} ctx.request
    * @param {Response} ctx.response
    */
-  async store ({ request, response }) {
+  async store ({ params, request, response }) {
+    const data = request.only([
+      'user_id',
+      'title',
+      'description',
+      'due_date',
+      'file_id'
+    ])
+
+    const task = await Task.create({ ...data, project_id: params.projects_id })
+
+    return task
   }
 
   /**
@@ -53,6 +74,9 @@ class TaskController {
    * @param {View} ctx.view
    */
   async show ({ params, request, response, view }) {
+    const task = await Task.findOrFail(params.id)
+
+    return task
   }
 
   /**
@@ -76,6 +100,20 @@ class TaskController {
    * @param {Response} ctx.response
    */
   async update ({ params, request, response }) {
+    const task = await Task.findOrFail(params.id)
+    const data = request.only([
+      'user_id',
+      'title',
+      'description',
+      'due_date',
+      'file_id'
+    ])
+
+    task.merge(data)
+
+    await task.save()
+
+    return task
   }
 
   /**
@@ -87,6 +125,9 @@ class TaskController {
    * @param {Response} ctx.response
    */
   async destroy ({ params, request, response }) {
+    const task = await Task.findOrFail(params.id)
+
+    await task.delete()
   }
 }
 
