@@ -20,11 +20,21 @@ class TaskController {
    * @param {Response} ctx.response
    * @param {View} ctx.view
    */
-  async index ({ params, request, response, view }) {
+  async index ({ params, request, response, view, auth }) {
+    const user = await auth.getUser()
+    if (await user.can('read_private_posts')) {
+      const tasks = await Task
+        .query()
+        .where('project_id', params.projects_id)
+        .with('user')
+        .fetch()
+
+      return tasks
+    }
+
     const tasks = await Task
       .query()
       .where('project_id', params.projects_id)
-      .with('user')
       .fetch()
 
     return tasks

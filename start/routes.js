@@ -23,5 +23,22 @@ Route.group(() => {
     .validator(new Map([[['projects.tasks.store'], ['Task']]]))
 }).middleware(['auth'])
 
-Route.resource('permissions', 'PermissionController').apiOnly().middleware('auth')
-Route.resource('roles', 'RoleController').apiOnly().middleware('auth')
+Route.resource('permissions', 'PermissionController')
+  .apiOnly()
+  .except(['index', 'show'])
+  .middleware(['auth', 'is:(administrator || modarator)'])
+
+Route.resource('permissions', 'PermissionController')
+  .apiOnly()
+  .only(['index', 'show'])
+  .middleware(['auth', 'can:(read_post || read_private_post)']) // role criada
+
+Route.resource('roles', 'RoleController')
+  .apiOnly()
+  .except(['index', 'show'])
+  .middleware(['auth', 'is:(administrator || modarator)'])
+
+Route.resource('roles', 'RoleController')
+  .apiOnly()
+  .only(['index', 'show'])
+  .middleware(['auth'])
