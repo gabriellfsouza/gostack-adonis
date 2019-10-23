@@ -4,6 +4,7 @@
 const Route = use('Route')
 
 Route.post('users', 'UserController.store').validator('User')
+Route.put('users/:id', 'UserController.update')
 Route.post('sessions', 'SessionController.store').validator('Session')
 
 Route.post('passwords', 'ForgotPasswordController.store').validator('ForgotPassword')
@@ -21,3 +22,6 @@ Route.group(() => {
     .apiOnly()
     .validator(new Map([[['projects.tasks.store'], ['Task']]]))
 }).middleware(['auth'])
+
+Route.resource('permissions', 'PermissionController').apiOnly().middleware('auth')
+Route.resource('roles', 'RoleController').apiOnly().middleware('auth')
